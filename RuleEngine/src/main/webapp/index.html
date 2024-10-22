@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+
+
+    <title>Rule Engine</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"], input[type="number"], textarea {
+            width: 300px;
+            padding: 10px;
+            margin: 5px 0;
+        }
+        input[type="submit"] {
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        pre {
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rule Engine</h1>
+
+    <h2>Create Rule</h2>
+    <form id="createRuleForm" action="/create_rule">
+        <label for="rule_string">Rule String:</label><br>
+        <input type="text" id="rule_string" name="rule_string" required><br>
+        <input type="submit" value="Create Rule">
+    </form>
+    <pre id="astOutput"></pre>
+
+    <h2>Combine Rules</h2>
+    <form id="combineRulesForm" action="/combine_rules">
+        <label for="rules">Rules (comma-separated):</label><br>
+        <input type="text" id="rules" name="rules" required placeholder="rule1, rule2"><br>
+        <input type="submit" value="Combine Rules">
+    </form>
+    <pre id="combinedAstOutput"></pre>
+
+    <h2>Evaluate Rule</h2>
+    <form id="evaluateRuleForm" action="/evaluate_rule">
+        <label for="data">User Data (JSON format):</label><br>
+        <textarea id="data" name="data" required placeholder='{"age": 35, "department": "Sales", "salary": 60000, "experience": 3}'></textarea><br>
+        <input type="submit" value="Evaluate Rule">
+    </form>
+    <pre id="evaluationResult"></pre>
+
+    <script>
+        $(document).ready(function() {
+            $("#createRuleForm").submit(function(event) {
+                event.preventDefault();
+                $.post("create_rule", $(this).serialize(), function(data) {
+                    $("#astOutput").text(JSON.stringify(data, null, 2));
+                }, "json");
+            });
+
+            $("#combineRulesForm").submit(function(event) {
+                event.preventDefault();
+                const rules = $("#rules").val().split(',').map(rule => rule.trim());
+                $.post("combine_rules", { rules: rules }, function(data) {
+                    $("#combinedAstOutput").text(JSON.stringify(data, null, 2));
+                }, "json");
+            });
+
+            $("#evaluateRuleForm").submit(function(event) {
+                event.preventDefault();
+                const jsonData = $("#data").val();
+                const jsonAst = $("#astOutput").text(); // Get the latest AST from the output
+                $.post("evaluate_rule", { ast: jsonAst, data: jsonData }, function(data) {
+                    $("#evaluationResult").text("Result: " + data.result);
+                }, "json");
+            });
+        });
+    </script>
+</body>
+</html>
